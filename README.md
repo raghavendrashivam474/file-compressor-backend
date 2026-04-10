@@ -15,7 +15,14 @@ A powerful FastAPI backend for compressing images, PDFs, and videos with industr
 - RESTful API design
 - Auto-generated Swagger documentation
 - CORS enabled for web clients
+## 🚀 Live Demo
 
+**Backend API:** https://file-compressor-backend.onrender.com  
+**API Docs:** https://file-compressor-backend.onrender.com/docs
+
+## 📱 Download APK
+
+[Download latest release](https://github.com/raghavendrashivam474/file-compressor-app/releases)
 ## 🚀 Quick Start
 
 ### Prerequisites
