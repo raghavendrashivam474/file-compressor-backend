@@ -1,5 +1,10 @@
-# 🗜️ File Compressor API
+# 🗜️ File Compressor [Backend/App]
 
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
+
+...rest of README
 A powerful FastAPI backend for compressing images, PDFs, and videos with industry-leading compression ratios.
 
 ## ✨ Features
