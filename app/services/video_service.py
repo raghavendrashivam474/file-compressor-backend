@@ -1,10 +1,5 @@
+import subprocess
 import os
-
-# Set FFmpeg paths directly (no PATH needed!)
-os.environ['FFMPEG_BINARY'] = r'C:\ffmpeg\bin\ffmpeg.exe'
-os.environ['FFPROBE_BINARY'] = r'C:\ffmpeg\bin\ffprobe.exe'
-
-import ffmpeg
 from app.utils.file_handler import OUTPUT_DIR, get_file_size
 
 class VideoCompressor:
@@ -44,39 +39,43 @@ class VideoCompressor:
             output_filename = f"compressed_{name}.mp4"
             output_path = os.path.join(OUTPUT_DIR, output_filename)
             
-            # Build FFmpeg stream
-            stream = ffmpeg.input(input_path)
+            # Build FFmpeg command
+            cmd = ['ffmpeg', '-i', input_path, '-y']
             
             # Apply resolution if specified
             if resolution:
                 height_map = {
-                    "480p": 480,
-                    "720p": 720,
-                    "1080p": 1080
+                    "480p": "480",
+                    "720p": "720",
+                    "1080p": "1080"
                 }
                 height = height_map.get(resolution)
                 if height:
-                    stream = ffmpeg.filter(stream, 'scale', -2, height)
+                    cmd.extend(['-vf', f'scale=-2:{height}'])
             
-            # Output with H.264 codec
-            stream = ffmpeg.output(
-                stream,
-                output_path,
-                vcodec='libx264',
-                crf=crf,
-                preset='medium',
-                acodec='aac',
-                audio_bitrate='128k'
+            # Add compression settings
+            cmd.extend([
+                '-vcodec', 'libx264',
+                '-crf', str(crf),
+                '-preset', 'medium',
+                '-acodec', 'aac',
+                '-b:a', '128k',
+                output_path
+            ])
+            
+            # Run FFmpeg
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minute timeout
             )
             
-            # Run FFmpeg with explicit binary path
-            ffmpeg.run(
-                stream,
-                cmd=r'C:\ffmpeg\bin\ffmpeg.exe',
-                overwrite_output=True,
-                capture_stdout=True,
-                capture_stderr=True
-            )
+            if result.returncode != 0:
+                return {
+                    "success": False,
+                    "error": f"FFmpeg error: {result.stderr}"
+                }
             
             # Get compressed size
             compressed_size = get_file_size(output_path)
@@ -94,11 +93,15 @@ class VideoCompressor:
                 "message": f"Compressed from {original_size}MB to {compressed_size}MB"
             }
             
-        except ffmpeg.Error as e:
-            error_message = e.stderr.decode() if e.stderr else str(e)
+        except subprocess.TimeoutExpired:
             return {
                 "success": False,
-                "error": f"FFmpeg error: {error_message}"
+                "error": "Video compression timed out. Try a smaller file."
+            }
+        except FileNotFoundError:
+            return {
+                "success": False,
+                "error": "FFmpeg not installed on server. Video compression unavailable."
             }
         except Exception as e:
             return {
